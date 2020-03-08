@@ -346,6 +346,7 @@ start_time = time()
 os.chdir(initial_path)
 
 
+
 vorticity_bc_1 = np.zeros([npoints,1], dtype = float) 
 for t in tqdm(range(0, nt)):
 
@@ -369,13 +370,13 @@ for t in tqdm(range(0, nt)):
 
 
  # ------------------------- ALE Scheme --------------------------------------------
- x_Ale, y_Ale, vx_Ale, vy_Ale = ale.rotate(npoints, x, y, dt, t, dirichlet_pts[4])
+ vx_Ale, vy_Ale = ale.rotate(npoints, t, dirichlet_pts[4])
 
  vx_SL = vx - vx_Ale
  vy_SL = vy - vy_Ale
 
- x = x_Ale
- y = y_Ale
+ x = x + vx_Ale*dt
+ y = y + vy_Ale*dt
  # --------------------------------------------------------------------------------
 
 
@@ -479,7 +480,6 @@ for t in tqdm(range(0, nt)):
 
 
  # Gaussian elimination
- print '1'
  vorticity_bc_dirichlet = np.zeros([npoints,1], dtype = float)
  vorticity_bc_neumann = np.zeros([npoints,1], dtype = float)
  vorticity_bc_2 = np.ones([npoints,1], dtype = float)
@@ -493,14 +493,12 @@ for t in tqdm(range(0, nt)):
   vorticity_LHS[mm,mm] = 1.0
   vorticity_bc_dirichlet[mm] = vorticity_bc_1[mm]
   vorticity_bc_2[mm] = 0.0
- print '2'
  #----------------------------------------------------------------------------------
 
 
 
  #---------- Step 3 - Solve the vorticity transport equation ----------------------
  # Taylor Galerkin Scheme
- print '3'
  if scheme_option == 1:
   scheme_name = 'Taylor Galerkin'
   A = np.copy(M)/dt
@@ -518,25 +516,19 @@ for t in tqdm(range(0, nt)):
  # Semi-Lagrangian Scheme
  elif scheme_option == 2:
 
-  print '5'
   # Linear Element   
   if polynomial_option == 1:
-   print '6'
    scheme_name = 'Semi Lagrangian Linear'
    w_d = semi_lagrangian.Linear2D(npoints, neighbors_elements, IEN, x, y, vx_SL, vy_SL, dt, w)
-   print '7'
    A = np.copy(M)/dt
    vorticity_RHS = sps.lil_matrix.dot(A,w_d)
-   print '8'
 
    vorticity_RHS = vorticity_RHS + (1.0/Re)*vorticity_bc_neumann
    vorticity_RHS = np.multiply(vorticity_RHS,vorticity_bc_2)
    vorticity_RHS = vorticity_RHS + vorticity_bc_dirichlet
-   print '9'
 
    w = scipy.sparse.linalg.cg(vorticity_LHS,vorticity_RHS,w, maxiter=1.0e+05, tol=1.0e-05)
    w = w[0].reshape((len(w[0]),1))
-   print '10'
 
   # Mini Element   
   elif polynomial_option == 2:
