@@ -162,8 +162,8 @@ nphysical              = msh.nphysical
 
 
 CFL = 0.5
-dt = float(CFL*length_min)
-#dt = 0.005
+#dt = float(CFL*length_min)
+dt = 0.03
 Re = 100.0
 Sc = 1.0
 
@@ -383,7 +383,9 @@ for t in tqdm(range(0, nt)):
 
 
  # ------------------------- Assembly --------------------------------------------
+ print ""
  Kxx, Kxy, Kyx, Kyy, K, M, MLump, Gx, Gy, polynomial_order = assembly.Element2D(polynomial_option, GL, npoints, nelem, IEN, x, y, gausspoints)
+ print ""
  # --------------------------------------------------------------------------------
 
 
@@ -596,10 +598,10 @@ for t in tqdm(range(0, nt)):
  #----------------------------------------------------------------------------------
 
 
- end_time = time()
- solution_time = end_time - start_time
- print ' time duration: %.1f seconds' %solution_time
- print ""
+end_time = time()
+solution_time = end_time - start_time
+print ' time duration: %.1f seconds' %solution_time
+print ""
 
 
 

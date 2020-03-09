@@ -15,7 +15,7 @@ def rotate(_npoints, _t, _dirichlet_pts):
  # vx = r*cos(wt), where w = 2pi/T
  # vy = r*sin(wt), where w = 2pi/T
 
- r = 0.1 # Amplitude
+ r = 0.2 # Amplitude
  T = 16.0   # Partition
  w = 2.0*np.pi/T
 
