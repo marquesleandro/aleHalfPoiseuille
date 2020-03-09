@@ -370,13 +370,25 @@ for t in tqdm(range(0, nt)):
 
 
  # ------------------------- ALE Scheme --------------------------------------------
- vx_Ale, vy_Ale = ale.rotate(npoints, t, dirichlet_pts[4])
+ # Linear Element
+ if polynomial_option == 1:
+  vx_Ale, vy_Ale = ale.rotate(npoints, t, dirichlet_pts[4])
 
- vx_SL = vx - vx_Ale
- vy_SL = vy - vy_Ale
+  vx_SL = vx - vx_Ale
+  vy_SL = vy - vy_Ale
 
- x = x + vx_Ale*dt
- y = y + vy_Ale*dt
+  x = x + vx_Ale*dt
+  y = y + vy_Ale*dt
+
+ # Quad Element
+ elif polynomial_option == 3:
+  vx_Ale, vy_Ale = ale.Quadrotate(npoints, nelem, IEN, t, dirichlet_pts[4])
+
+  vx_SL = vx - vx_Ale
+  vy_SL = vy - vy_Ale
+
+  x = x + vx_Ale*dt
+  y = y + vy_Ale*dt
  # --------------------------------------------------------------------------------
 
 
