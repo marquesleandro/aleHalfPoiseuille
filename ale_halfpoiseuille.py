@@ -92,7 +92,8 @@ start_time = time()
 
 # Linear Element
 if polynomial_option == 1:
- mesh_name = 'malha_half_poiseuille.msh'
+ mesh_name = 'malha_half_poiseuille_ALE.msh'
+ #mesh_name = 'malha_half_poiseuille.msh'
  equation_number = 4
 
  directory = search_file.Find(mesh_name)
@@ -349,8 +350,8 @@ os.chdir(initial_path)
 
 vorticity_bc_1 = np.zeros([npoints,1], dtype = float) 
 for t in tqdm(range(0, nt)):
-
-    
+#for t in range(0, nt):
+     
  # Linear and Mini Elements
  if polynomial_option == 1 or polynomial_option == 2:   
   # ------------------------ Export VTK File ---------------------------------------
@@ -372,13 +373,32 @@ for t in tqdm(range(0, nt)):
  # ------------------------- ALE Scheme --------------------------------------------
  # Linear Element
  if polynomial_option == 1:
-  vx_Ale, vy_Ale = ale.rotate(npoints, t, dirichlet_pts[4])
+  k_lagrangian = 0.0
+  k_laplace = 1.0
+  
+  vx_smooth, vy_smooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
+
+  vx_Ale = k_lagrangian*vx + k_laplace*vx_smooth
+  vy_Ale = k_lagrangian*vy + k_laplace*vy_smooth
+
+
+  for i in range(0,len(dirichlet_pts[4])):
+   v1 = dirichlet_pts[4][i][1] - 1
+   v2 = dirichlet_pts[4][i][2] - 1
+
+   vx_Ale[v1] = 0.0
+   vy_Ale[v1] = 0.0
+
+   vx_Ale[v2] = 0.0
+   vy_Ale[v2] = 0.0
+
+  x = x + vx_Ale*dt
+  y = y + vy_Ale*dt
 
   vx_SL = vx - vx_Ale
   vy_SL = vy - vy_Ale
 
-  x = x + vx_Ale*dt
-  y = y + vy_Ale*dt
+
 
  # Quad Element
  elif polynomial_option == 3:
@@ -395,9 +415,13 @@ for t in tqdm(range(0, nt)):
 
 
  # ------------------------- Assembly --------------------------------------------
- print ""
+ print "\n"
+ print "Assembly: "
  Kxx, Kxy, Kyx, Kyy, K, M, MLump, Gx, Gy, polynomial_order = assembly.Element2D(polynomial_option, GL, npoints, nelem, IEN, x, y, gausspoints)
- print ""
+ print "\n"
+ print ' ----------------------------'
+ print ' SOLVE THE LINEARS EQUATIONS:'
+ print ' ----------------------------'
  # --------------------------------------------------------------------------------
 
 
@@ -518,7 +542,7 @@ for t in tqdm(range(0, nt)):
   A = np.copy(M)/dt
   vorticity_RHS = sps.lil_matrix.dot(A,w) - np.multiply(vx,sps.lil_matrix.dot(Gx,w))\
         - np.multiply(vy,sps.lil_matrix.dot(Gy,w))\
-        - (dt/2.0)*np.multiply(vx,(np.multiply(vx,sps.lil_matrix.dot(Kxx,w)) + np.multiply(vy,sps.lil_matrix.dot(Kyx,w))))\
+         (dt/2.0)*np.multiply(vx,(np.multiply(vx,sps.lil_matrix.dot(Kxx,w)) + np.multiply(vy,sps.lil_matrix.dot(Kyx,w))))\
         - (dt/2.0)*np.multiply(vy,(np.multiply(vx,sps.lil_matrix.dot(Kxy,w)) + np.multiply(vy,sps.lil_matrix.dot(Kyy,w))))
   vorticity_RHS = np.multiply(vorticity_RHS,vorticity_bc_2)
   vorticity_RHS = vorticity_RHS + vorticity_bc_dirichlet
