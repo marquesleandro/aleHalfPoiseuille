@@ -371,46 +371,28 @@ for t in tqdm(range(0, nt)):
 
 
  # ------------------------- ALE Scheme --------------------------------------------
- # Linear Element
- if polynomial_option == 1:
-  k_lagrangian = 0.5
-  k_laplace = 1.0
-  k_velocity = 0.0
-  
-  vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
-  vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes, npoints, vx, vy)
+ k_lagrangian = 0.0
+ k_laplace = 1.0
+ k_velocity = 0.0
+ 
+ vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
+ vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes, npoints, vx, vy)
 
-  vx_Ale = k_lagrangian*vx + k_laplace*vx_laplaciansmooth + k_velocity*vx_velocitysmooth
-  vy_Ale = k_lagrangian*vy + k_laplace*vy_laplaciansmooth + k_velocity*vy_velocitysmooth
+ vx_Ale = k_lagrangian*vx + k_laplace*vx_laplaciansmooth + k_velocity*vx_velocitysmooth
+ vy_Ale = k_lagrangian*vy + k_laplace*vy_laplaciansmooth + k_velocity*vy_velocitysmooth
 
 
-  for i in range(0,len(dirichlet_pts[4])):
-   v1 = dirichlet_pts[4][i][1] - 1
-   v2 = dirichlet_pts[4][i][2] - 1
+ for i in range(0,len(dirichlet_pts[4])):
+  for j in range(0,(len(dirichlet_pts[4][i])-1)):
+   node = dirichlet_pts[4][i][j+1] - 1
+   vx_Ale[node] = 0.0
+   vy_Ale[node] = 0.0
 
-   vx_Ale[v1] = 0.0
-   vy_Ale[v1] = 0.0
+ x = x + vx_Ale*dt
+ y = y + vy_Ale*dt
 
-   vx_Ale[v2] = 0.0
-   vy_Ale[v2] = 0.0
-
-  x = x + vx_Ale*dt
-  y = y + vy_Ale*dt
-
-  vx_SL = vx - vx_Ale
-  vy_SL = vy - vy_Ale
-
-
-
- # Quad Element
- elif polynomial_option == 3:
-  vx_Ale, vy_Ale = ale.Quadrotate(npoints, nelem, IEN, t, dirichlet_pts[4])
-
-  vx_SL = vx - vx_Ale
-  vy_SL = vy - vy_Ale
-
-  x = x + vx_Ale*dt
-  y = y + vy_Ale*dt
+ vx_SL = vx - vx_Ale
+ vy_SL = vy - vy_Ale
  # --------------------------------------------------------------------------------
 
 
