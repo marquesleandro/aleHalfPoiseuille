@@ -112,8 +112,8 @@ def Quadrotate(_npoints, _nelem, _IEN, _t, _dirichlet_pts):
 
 
 def Laplacian_smoothing(_neighbors_nodes, _npoints, _x, _y, _dt):
- vx_smooth = np.zeros([_npoints,1], dtype = float)
- vy_smooth = np.zeros([_npoints,1], dtype = float)
+ vx_laplaciansmooth = np.zeros([_npoints,1], dtype = float)
+ vy_laplaciansmooth = np.zeros([_npoints,1], dtype = float)
  
  for i in range(0,_npoints):
   num_nghb = len(_neighbors_nodes[i])
@@ -126,7 +126,26 @@ def Laplacian_smoothing(_neighbors_nodes, _npoints, _x, _y, _dt):
    x_distance = x_distance + (1.0/num_nghb)*(_x[node_nghb] - _x[i])
    y_distance = y_distance + (1.0/num_nghb)*(_y[node_nghb] - _y[i])
 
-  vx_smooth[i] = x_distance/_dt
-  vy_smooth[i] = y_distance/_dt
+  vx_laplaciansmooth[i] = x_distance/_dt
+  vy_laplaciansmooth[i] = y_distance/_dt
 
- return vx_smooth, vy_smooth 
+ return vx_laplaciansmooth, vy_laplaciansmooth
+
+
+def Velocity_smoothing(_neighbors_nodes, _npoints, _vx, _vy):
+ vx_velocitysmooth = np.zeros([_npoints,1], dtype = float)
+ vy_velocitysmooth = np.zeros([_npoints,1], dtype = float)
+ 
+ for i in range(0,_npoints):
+  num_nghb = len(_neighbors_nodes[i])
+  
+  for j in range(0,num_nghb):
+   node_nghb = _neighbors_nodes[i][j]
+
+   vx_velocitysmooth = vx_velocitysmooth + (1.0/num_nghb)*_vx[node_nghb]
+   vy_velocitysmooth = vy_velocitysmooth + (1.0/num_nghb)*_vy[node_nghb]
+
+
+ return vx_velocitysmooth, vy_velocitysmooth
+
+

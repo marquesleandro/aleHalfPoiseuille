@@ -373,13 +373,15 @@ for t in tqdm(range(0, nt)):
  # ------------------------- ALE Scheme --------------------------------------------
  # Linear Element
  if polynomial_option == 1:
-  k_lagrangian = 0.0
+  k_lagrangian = 0.5
   k_laplace = 1.0
+  k_velocity = 0.0
   
-  vx_smooth, vy_smooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
+  vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
+  vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes, npoints, vx, vy)
 
-  vx_Ale = k_lagrangian*vx + k_laplace*vx_smooth
-  vy_Ale = k_lagrangian*vy + k_laplace*vy_smooth
+  vx_Ale = k_lagrangian*vx + k_laplace*vx_laplaciansmooth + k_velocity*vx_velocitysmooth
+  vy_Ale = k_lagrangian*vy + k_laplace*vy_laplaciansmooth + k_velocity*vy_velocitysmooth
 
 
   for i in range(0,len(dirichlet_pts[4])):
