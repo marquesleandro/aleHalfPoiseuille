@@ -21,6 +21,7 @@ import import_msh
 import assembly
 import ale
 import benchmark_problems
+import import_vtk
 import semi_lagrangian
 import export_vtk
 import relatory
@@ -83,7 +84,6 @@ print ""
 
 
 
-
 print ' ------------'
 print ' IMPORT MESH:'
 print ' ------------'
@@ -107,7 +107,8 @@ if polynomial_option == 1:
 
 # Mini Element
 elif polynomial_option == 2:
- mesh_name = 'malha_half_poiseuille.msh'
+ mesh_name = 'malha_half_poiseuille_ALE.msh'
+ #mesh_name = 'malha_half_poiseuille.msh'
  equation_number = 4
 
  directory = search_file.Find(mesh_name)
@@ -120,7 +121,7 @@ elif polynomial_option == 2:
 
 # Quad Element
 elif polynomial_option == 3:
- mesh_name = 'malha_half_poiseuille_quad.msh'
+ mesh_name = 'malha_half_poiseuille_quad_ALE.msh'
  equation_number = 4
  
  directory = search_file.Find(mesh_name)
@@ -164,7 +165,7 @@ nphysical              = msh.nphysical
 
 CFL = 0.5
 #dt = float(CFL*length_min)
-dt = 0.03
+dt = 0.002
 Re = 100.0
 Sc = 1.0
 
@@ -176,12 +177,12 @@ print ""
 
 
 
+
 print ' ---------'
 print ' ASSEMBLY:'
 print ' ---------'
 
 start_time = time()
-
 
 Kxx, Kxy, Kyx, Kyy, K, M, MLump, Gx, Gy, polynomial_order = assembly.Element2D(polynomial_option, GL, npoints, nelem, IEN, x, y, gausspoints)
 
@@ -194,12 +195,12 @@ print ""
 
 
 
-
 print ' --------------------------------'
 print ' INITIAL AND BOUNDARY CONDITIONS:'
 print ' --------------------------------'
 
 start_time = time()
+
 
 # Linear Element
 if polynomial_option == 1:
@@ -305,6 +306,12 @@ psi = psi[0].reshape((len(psi[0]),1))
 #----------------------------------------------------------------------------------
 
 
+# -------------------------- Import VTK File ------------------------------------
+#npoints, nelem, IEN, x, y, vx, vy, w, w, psi = import_vtk.vtkfile_linear("/home/marquesleandro/ale_halfpoiseuille/results/mini6/mini6299.vtk",polynomial_option)
+#----------------------------------------------------------------------------------
+
+
+
 end_time = time()
 bc_apply_time = end_time - start_time
 print ' time duration: %.1f seconds' %bc_apply_time
@@ -350,32 +357,87 @@ os.chdir(initial_path)
 
 vorticity_bc_1 = np.zeros([npoints,1], dtype = float) 
 for t in tqdm(range(0, nt)):
-#for t in range(0, nt):
-     
+
+ print ""
+ print '''
+                COPYRIGHT                    
+  ======================================
+  Simulator: %s
+  created by Leandro Marques at 02/2019
+  e-mail: marquesleandro67@gmail.com
+  Gesar Search Group
+  State University of the Rio de Janeiro
+  ======================================
+ ''' %sys.argv[0]
+
+
+
+ print ' -----------------------------'
+ print ' PARAMETERS OF THE SIMULATION:'
+ print ' -----------------------------'
+ 
+ print ' Mesh: %s' %mesh_name
+ print ' Number of equation: %s' %equation_number
+ print ' Number of nodes: %s' %npoints
+ print ' Number of elements: %s' %nelem
+ print ' Smallest edge length: %f' %length_min
+ print ' Time step: %s' %dt
+ print ' Number of time iteration: %s' %t
+ print ' Reynolds number: %s' %Re
+ print ' Schmidt number: %s' %Sc
+ print ""
+
+
+
+
+
+ # ------------------------ Export VTK File ---------------------------------------
+ print ' ----------------'
+ print ' EXPORT VTK FILE:'
+ print ' ----------------'
+
+
+ start_time = time()
+
+
  # Linear and Mini Elements
  if polynomial_option == 1 or polynomial_option == 2:   
-  # ------------------------ Export VTK File ---------------------------------------
   save = export_vtk.Linear2D(x,y,IEN,npoints,nelem,w,w,psi,vx,vy)
   save.create_dir(directory_save)
   save.saveVTK(directory_save + str(t))
-  # --------------------------------------------------------------------------------
 
  # Quad Element
  elif polynomial_option == 3:   
-  # ------------------------ Export VTK File ---------------------------------------
   save = export_vtk.Quad2D(x,y,IEN,npoints,nelem,w,w,psi,vx,vy)
   save.create_dir(directory_save)
   save.saveVTK(directory_save + str(t))
-  # --------------------------------------------------------------------------------
+
+
+ end_time = time()
+ export_time_solver = end_time - start_time
+ print ' time duration: %.1f seconds' %export_time_solver
+ print ""
+ # ---------------------------------------------------------------------------------
+
+
 
 
 
  # ------------------------- ALE Scheme --------------------------------------------
+ print ' ----'
+ print ' ALE:'
+ print ' ----'
+
+
+ start_time = time()
+
+
  k_lagrangian = 0.0
  k_laplace = 1.0
  k_velocity = 0.0
  
  vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
+ #vx_laplaciansmooth, vy_laplaciansmooth = ale.MINILaplacian_smoothing(neighbors_nodes, npoints, nelem, IEN, x, y, dt)
  vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes, npoints, vx, vy)
 
  vx_Ale = k_lagrangian*vx + k_laplace*vx_laplaciansmooth + k_velocity*vx_velocitysmooth
@@ -393,26 +455,37 @@ for t in tqdm(range(0, nt)):
 
  vx_SL = vx - vx_Ale
  vy_SL = vy - vy_Ale
- # --------------------------------------------------------------------------------
+
+ end_time = time()
+ ALE_time_solver = end_time - start_time
+ print ' time duration: %.1f seconds' %ALE_time_solver
+ print ""
+ # ---------------------------------------------------------------------------------
+
 
 
 
 
  # ------------------------- Assembly --------------------------------------------
- print "\n"
- print "Assembly: "
+ print ' ---------'
+ print ' ASSEMBLY:'
+ print ' ---------'
+
  Kxx, Kxy, Kyx, Kyy, K, M, MLump, Gx, Gy, polynomial_order = assembly.Element2D(polynomial_option, GL, npoints, nelem, IEN, x, y, gausspoints)
- print "\n"
- print ' ----------------------------'
- print ' SOLVE THE LINEARS EQUATIONS:'
- print ' ----------------------------'
+ print ""
  # --------------------------------------------------------------------------------
 
 
 
 
  # ------------------------ Boundaries Conditions ----------------------------------
- # ---------------------------------------------------------------------------------
+ print ' --------------------------------'
+ print ' INITIAL AND BOUNDARY CONDITIONS:'
+ print ' --------------------------------'
+ 
+ start_time = time()
+ 
+ 
  # Linear Element
  if polynomial_option == 1:
   # Applying vx condition
@@ -435,10 +508,8 @@ for t in tqdm(range(0, nt)):
   streamfunction_LHS0 = sps.lil_matrix.copy(K)
   condition_streamfunction = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
   condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
- # ---------------------------------------------------------------------------------
 
-
- # ---------------------------------------------------------------------------------
+ 
  # Mini Element
  elif polynomial_option == 2:
   # Applying vx condition
@@ -461,11 +532,8 @@ for t in tqdm(range(0, nt)):
   streamfunction_LHS0 = sps.lil_matrix.copy(K)
   condition_streamfunction = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
   condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
- # ---------------------------------------------------------------------------------
-
-
-
- # ---------------------------------------------------------------------------------
+ 
+ 
  # Quad Element
  elif polynomial_option == 3:
   # Applying vx condition
@@ -488,19 +556,35 @@ for t in tqdm(range(0, nt)):
   streamfunction_LHS0 = sps.lil_matrix.copy(K)
   condition_streamfunction = benchmark_problems.QuadHalf_Poiseuille(nphysical,npoints,x,y)
   condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
+
+
+ end_time = time()
+ bc_apply_time_solver = end_time - start_time
+ print ' time duration: %.1f seconds' %bc_apply_time_solver
+ print ""
  # ---------------------------------------------------------------------------------
 
 
 
 
 
+ # ------------------------ SOLVE LINEAR EQUATIONS ----------------------------------
+ print ' ----------------------------'
+ print ' SOLVE THE LINEARS EQUATIONS:'
+ print ' ----------------------------'
+ print ""
+ print ' Saving simulation in %s' %directory_save
+ print ""
+
+
+ 
  #---------- Step 2 - Compute the boundary conditions for vorticity --------------
  vorticity_RHS = sps.lil_matrix.dot(Gx,vy) - sps.lil_matrix.dot(Gy,vx)
  vorticity_LHS = sps.lil_matrix.copy(M)
  vorticity_bc_1 = scipy.sparse.linalg.cg(vorticity_LHS,vorticity_RHS,vorticity_bc_1, maxiter=1.0e+05, tol=1.0e-05)
  vorticity_bc_1 = vorticity_bc_1[0].reshape((len(vorticity_bc_1[0]),1))
 
-
+ 
  # Gaussian elimination
  vorticity_bc_dirichlet = np.zeros([npoints,1], dtype = float)
  vorticity_bc_neumann = np.zeros([npoints,1], dtype = float)
@@ -526,7 +610,7 @@ for t in tqdm(range(0, nt)):
   A = np.copy(M)/dt
   vorticity_RHS = sps.lil_matrix.dot(A,w) - np.multiply(vx,sps.lil_matrix.dot(Gx,w))\
         - np.multiply(vy,sps.lil_matrix.dot(Gy,w))\
-         (dt/2.0)*np.multiply(vx,(np.multiply(vx,sps.lil_matrix.dot(Kxx,w)) + np.multiply(vy,sps.lil_matrix.dot(Kyx,w))))\
+        - (dt/2.0)*np.multiply(vx,(np.multiply(vx,sps.lil_matrix.dot(Kxx,w)) + np.multiply(vy,sps.lil_matrix.dot(Kyx,w))))\
         - (dt/2.0)*np.multiply(vy,(np.multiply(vx,sps.lil_matrix.dot(Kxy,w)) + np.multiply(vy,sps.lil_matrix.dot(Kyy,w))))
   vorticity_RHS = np.multiply(vorticity_RHS,vorticity_bc_2)
   vorticity_RHS = vorticity_RHS + vorticity_bc_dirichlet
@@ -579,12 +663,6 @@ for t in tqdm(range(0, nt)):
 
    w = scipy.sparse.linalg.cg(vorticity_LHS,vorticity_RHS,w, maxiter=1.0e+05, tol=1.0e-05)
    w = w[0].reshape((len(w[0]),1)) 
-
-  else:
-   print ""
-   print " Error: Simulator Scheme not found"
-   print ""
-   sys.exit()
  #----------------------------------------------------------------------------------
 
 
@@ -615,13 +693,14 @@ for t in tqdm(range(0, nt)):
  yvelocity_RHS = yvelocity_RHS + condition_yvelocity.bc_dirichlet
  vy = scipy.sparse.linalg.cg(condition_yvelocity.LHS,yvelocity_RHS,vy, maxiter=1.0e+05, tol=1.0e-05)
  vy = vy[0].reshape((len(vy[0]),1))
- #----------------------------------------------------------------------------------
+ # ---------------------------------------------------------------------------------
 
 
 end_time = time()
 solution_time = end_time - start_time
 print ' time duration: %.1f seconds' %solution_time
 print ""
+#----------------------------------------------------------------------------------
 
 
 
@@ -636,3 +715,5 @@ print ""
 
 # -------------------------------- Export Relatory ---------------------------------------
 relatory.export(save.path, directory_save, sys.argv[0], benchmark_problem, scheme_name, mesh_name, equation_number, npoints, nelem, length_min, dt, nt, Re, Sc, import_mesh_time, assembly_time, bc_apply_time, solution_time, polynomial_order, gausspoints)
+
+
