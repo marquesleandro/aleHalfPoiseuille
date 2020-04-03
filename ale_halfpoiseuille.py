@@ -155,6 +155,7 @@ IEN                    = msh.IEN
 neumann_edges          = msh.neumann_edges
 dirichlet_pts          = msh.dirichlet_pts
 neighbors_nodes        = msh.neighbors_nodes
+neighbors_nodes1        = msh.neighbors_nodes1
 neighbors_elements     = msh.neighbors_elements
 far_neighbors_nodes    = msh.far_neighbors_nodes
 far_neighbors_elements = msh.far_neighbors_elements
@@ -350,12 +351,17 @@ print ""
 
 
 
-start_time = time()
+start_solution_time = time()
 os.chdir(initial_path)
 
 
 
 vorticity_bc_1 = np.zeros([npoints,1], dtype = float) 
+x_old = np.zeros([npoints,1], dtype = float)
+y_old = np.zeros([npoints,1], dtype = float)
+vx_old = np.zeros([npoints,1], dtype = float)
+vy_old = np.zeros([npoints,1], dtype = float)
+end_type = 0
 for t in tqdm(range(0, nt)):
 
  print ""
@@ -424,145 +430,155 @@ for t in tqdm(range(0, nt)):
 
 
  # ------------------------- ALE Scheme --------------------------------------------
- print ' ----'
- print ' ALE:'
- print ' ----'
-
-
- start_time = time()
-
-
- k_lagrangian = 0.0
- k_laplace = 1.0
- k_velocity = 0.0
+ xmeshALE_dif = np.linalg.norm(x-x_old)
+ ymeshALE_dif = np.linalg.norm(y-y_old)
+ if not xmeshALE_dif < 5e-3 and not ymeshALE_dif < 5e-3:
+  x_old = np.copy(x)
+  y_old = np.copy(y)
  
- vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
- #vx_laplaciansmooth, vy_laplaciansmooth = ale.MINILaplacian_smoothing(neighbors_nodes, npoints, nelem, IEN, x, y, dt)
- vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes, npoints, vx, vy)
-
- vx_Ale = k_lagrangian*vx + k_laplace*vx_laplaciansmooth + k_velocity*vx_velocitysmooth
- vy_Ale = k_lagrangian*vy + k_laplace*vy_laplaciansmooth + k_velocity*vy_velocitysmooth
-
-
- for i in range(0,len(dirichlet_pts[4])):
-  for j in range(0,(len(dirichlet_pts[4][i])-1)):
-   node = dirichlet_pts[4][i][j+1] - 1
-   vx_Ale[node] = 0.0
-   vy_Ale[node] = 0.0
-
- x = x + vx_Ale*dt
- y = y + vy_Ale*dt
-
- vx_SL = vx - vx_Ale
- vy_SL = vy - vy_Ale
-
- end_time = time()
- ALE_time_solver = end_time - start_time
- print ' time duration: %.1f seconds' %ALE_time_solver
- print ""
- # ---------------------------------------------------------------------------------
-
-
-
-
-
- # ------------------------- Assembly --------------------------------------------
- print ' ---------'
- print ' ASSEMBLY:'
- print ' ---------'
-
- Kxx, Kxy, Kyx, Kyy, K, M, MLump, Gx, Gy, polynomial_order = assembly.Element2D(polynomial_option, GL, npoints, nelem, IEN, x, y, gausspoints)
- print ""
- # --------------------------------------------------------------------------------
-
-
-
-
- # ------------------------ Boundaries Conditions ----------------------------------
- print ' --------------------------------'
- print ' INITIAL AND BOUNDARY CONDITIONS:'
- print ' --------------------------------'
- 
- start_time = time()
+  print ' ----'
+  print ' ALE:'
+  print ' ----'
  
  
- # Linear Element
- if polynomial_option == 1:
-  # Applying vx condition
-  xvelocity_LHS0 = sps.lil_matrix.copy(M)
-  condition_xvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
-  condition_xvelocity.neumann_condition(neumann_edges[1])
-  condition_xvelocity.dirichlet_condition(dirichlet_pts[1])
-  condition_xvelocity.gaussian_elimination(xvelocity_LHS0,neighbors_nodes)
-  vorticity_ibc = condition_xvelocity.ibc
-  benchmark_problem = condition_xvelocity.benchmark_problem
- 
-  # Applying vy condition
-  yvelocity_LHS0 = sps.lil_matrix.copy(M)
-  condition_yvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
-  condition_yvelocity.neumann_condition(neumann_edges[2])
-  condition_yvelocity.dirichlet_condition(dirichlet_pts[2])
-  condition_yvelocity.gaussian_elimination(yvelocity_LHS0,neighbors_nodes)
- 
-  # Applying psi condition
-  streamfunction_LHS0 = sps.lil_matrix.copy(K)
-  condition_streamfunction = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
-  condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
-
- 
- # Mini Element
- elif polynomial_option == 2:
-  # Applying vx condition
-  xvelocity_LHS0 = sps.lil_matrix.copy(M)
-  condition_xvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
-  condition_xvelocity.neumann_condition(neumann_edges[1])
-  condition_xvelocity.dirichlet_condition(dirichlet_pts[1])
-  condition_xvelocity.gaussian_elimination(xvelocity_LHS0,neighbors_nodes)
-  vorticity_ibc = condition_xvelocity.ibc
-  benchmark_problem = condition_xvelocity.benchmark_problem
- 
-  # Applying vy condition
-  yvelocity_LHS0 = sps.lil_matrix.copy(M)
-  condition_yvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
-  condition_yvelocity.neumann_condition(neumann_edges[2])
-  condition_yvelocity.dirichlet_condition(dirichlet_pts[2])
-  condition_yvelocity.gaussian_elimination(yvelocity_LHS0,neighbors_nodes)
- 
-  # Applying psi condition
-  streamfunction_LHS0 = sps.lil_matrix.copy(K)
-  condition_streamfunction = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
-  condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
+  start_time = time()
  
  
- # Quad Element
- elif polynomial_option == 3:
-  # Applying vx condition
-  xvelocity_LHS0 = sps.lil_matrix.copy(M)
-  condition_xvelocity = benchmark_problems.QuadHalf_Poiseuille(nphysical,npoints,x,y)
-  condition_xvelocity.neumann_condition(neumann_edges[1])
-  condition_xvelocity.dirichlet_condition(dirichlet_pts[1])
-  condition_xvelocity.gaussian_elimination(xvelocity_LHS0,neighbors_nodes)
-  vorticity_ibc = condition_xvelocity.ibc
-  benchmark_problem = condition_xvelocity.benchmark_problem
- 
-  # Applying vy condition
-  yvelocity_LHS0 = sps.lil_matrix.copy(M)
-  condition_yvelocity = benchmark_problems.QuadHalf_Poiseuille(nphysical,npoints,x,y)
-  condition_yvelocity.neumann_condition(neumann_edges[2])
-  condition_yvelocity.dirichlet_condition(dirichlet_pts[2])
-  condition_yvelocity.gaussian_elimination(yvelocity_LHS0,neighbors_nodes)
- 
-  # Applying psi condition
-  streamfunction_LHS0 = sps.lil_matrix.copy(K)
-  condition_streamfunction = benchmark_problems.QuadHalf_Poiseuille(nphysical,npoints,x,y)
-  condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
+  k_lagrangian = 0.0
+  k_laplace = 1.0
+  k_velocity = 0.0
+  
+  vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes1, npoints, x, y, dt)
+  #vx_laplaciansmooth, vy_laplaciansmooth = ale.MINILaplacian_smoothing(neighbors_nodes, npoints, nelem, IEN, x, y, dt)
+  #vx_laplaciansmooth, vy_laplaciansmooth = ale.QUADLaplacian_smoothing(neighbors_nodes, npoints, nelem, IEN, x, y, dt)
 
 
- end_time = time()
- bc_apply_time_solver = end_time - start_time
- print ' time duration: %.1f seconds' %bc_apply_time_solver
- print ""
- # ---------------------------------------------------------------------------------
+  vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes1, npoints, vx, vy)
+
+ 
+  vx_Ale = k_lagrangian*vx + k_laplace*vx_laplaciansmooth + k_velocity*vx_velocitysmooth
+  vy_Ale = k_lagrangian*vy + k_laplace*vy_laplaciansmooth + k_velocity*vy_velocitysmooth
+ 
+ 
+  for i in range(0,len(dirichlet_pts[4])):
+   for j in range(0,(len(dirichlet_pts[4][i])-1)):
+    node = dirichlet_pts[4][i][j+1] - 1
+    vx_Ale[node] = 0.0
+    vy_Ale[node] = 0.0
+ 
+  x = x + vx_Ale*dt
+  y = y + vy_Ale*dt
+ 
+  vx_SL = vx - vx_Ale
+  vy_SL = vy - vy_Ale
+ 
+  end_time = time()
+  ALE_time_solver = end_time - start_time
+  print ' time duration: %.1f seconds' %ALE_time_solver
+  print ""
+  # ---------------------------------------------------------------------------------
+ 
+ 
+ 
+ 
+
+  # ------------------------- Assembly --------------------------------------------
+  print ' ---------'
+  print ' ASSEMBLY:'
+  print ' ---------'
+
+  Kxx, Kxy, Kyx, Kyy, K, M, MLump, Gx, Gy, polynomial_order = assembly.Element2D(polynomial_option, GL, npoints, nelem, IEN, x, y, gausspoints)
+  print ""
+  # --------------------------------------------------------------------------------
+
+
+
+
+  # ------------------------ Boundaries Conditions ----------------------------------
+  print ' --------------------------------'
+  print ' INITIAL AND BOUNDARY CONDITIONS:'
+  print ' --------------------------------'
+  
+  start_time = time()
+  
+  
+  # Linear Element
+  if polynomial_option == 1:
+   # Applying vx condition
+   xvelocity_LHS0 = sps.lil_matrix.copy(M)
+   condition_xvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
+   condition_xvelocity.neumann_condition(neumann_edges[1])
+   condition_xvelocity.dirichlet_condition(dirichlet_pts[1])
+   condition_xvelocity.gaussian_elimination(xvelocity_LHS0,neighbors_nodes)
+   vorticity_ibc = condition_xvelocity.ibc
+   benchmark_problem = condition_xvelocity.benchmark_problem
+  
+   # Applying vy condition
+   yvelocity_LHS0 = sps.lil_matrix.copy(M)
+   condition_yvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
+   condition_yvelocity.neumann_condition(neumann_edges[2])
+   condition_yvelocity.dirichlet_condition(dirichlet_pts[2])
+   condition_yvelocity.gaussian_elimination(yvelocity_LHS0,neighbors_nodes)
+  
+   # Applying psi condition
+   streamfunction_LHS0 = sps.lil_matrix.copy(K)
+   condition_streamfunction = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
+   condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
+ 
+  
+  # Mini Element
+  elif polynomial_option == 2:
+   # Applying vx condition
+   xvelocity_LHS0 = sps.lil_matrix.copy(M)
+   condition_xvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
+   condition_xvelocity.neumann_condition(neumann_edges[1])
+   condition_xvelocity.dirichlet_condition(dirichlet_pts[1])
+   condition_xvelocity.gaussian_elimination(xvelocity_LHS0,neighbors_nodes)
+   vorticity_ibc = condition_xvelocity.ibc
+   benchmark_problem = condition_xvelocity.benchmark_problem
+  
+   # Applying vy condition
+   yvelocity_LHS0 = sps.lil_matrix.copy(M)
+   condition_yvelocity = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
+   condition_yvelocity.neumann_condition(neumann_edges[2])
+   condition_yvelocity.dirichlet_condition(dirichlet_pts[2])
+   condition_yvelocity.gaussian_elimination(yvelocity_LHS0,neighbors_nodes)
+  
+   # Applying psi condition
+   streamfunction_LHS0 = sps.lil_matrix.copy(K)
+   condition_streamfunction = benchmark_problems.Half_Poiseuille(nphysical,npoints,x,y)
+   condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
+  
+  
+  # Quad Element
+  elif polynomial_option == 3:
+   # Applying vx condition
+   xvelocity_LHS0 = sps.lil_matrix.copy(M)
+   condition_xvelocity = benchmark_problems.QuadHalf_Poiseuille(nphysical,npoints,x,y)
+   condition_xvelocity.neumann_condition(neumann_edges[1])
+   condition_xvelocity.dirichlet_condition(dirichlet_pts[1])
+   condition_xvelocity.gaussian_elimination(xvelocity_LHS0,neighbors_nodes)
+   vorticity_ibc = condition_xvelocity.ibc
+   benchmark_problem = condition_xvelocity.benchmark_problem
+  
+   # Applying vy condition
+   yvelocity_LHS0 = sps.lil_matrix.copy(M)
+   condition_yvelocity = benchmark_problems.QuadHalf_Poiseuille(nphysical,npoints,x,y)
+   condition_yvelocity.neumann_condition(neumann_edges[2])
+   condition_yvelocity.dirichlet_condition(dirichlet_pts[2])
+   condition_yvelocity.gaussian_elimination(yvelocity_LHS0,neighbors_nodes)
+  
+   # Applying psi condition
+   streamfunction_LHS0 = sps.lil_matrix.copy(K)
+   condition_streamfunction = benchmark_problems.QuadHalf_Poiseuille(nphysical,npoints,x,y)
+   condition_streamfunction.streamfunction_condition(dirichlet_pts[3],streamfunction_LHS0,neighbors_nodes)
+ 
+ 
+  end_time = time()
+  bc_apply_time_solver = end_time - start_time
+  print ' time duration: %.1f seconds' %bc_apply_time_solver
+  print ""
+  # ---------------------------------------------------------------------------------
 
 
 
@@ -576,6 +592,7 @@ for t in tqdm(range(0, nt)):
  print ' Saving simulation in %s' %directory_save
  print ""
 
+ start_solver_time = time()
 
  
  #---------- Step 2 - Compute the boundary conditions for vorticity --------------
@@ -681,6 +698,7 @@ for t in tqdm(range(0, nt)):
 
  #---------- Step 5 - Compute the velocity field -----------------------------------
  # Velocity vx
+ vx_old = np.copy(vx)
  xvelocity_RHS = sps.lil_matrix.dot(Gy,psi)
  xvelocity_RHS = np.multiply(xvelocity_RHS,condition_xvelocity.bc_2)
  xvelocity_RHS = xvelocity_RHS + condition_xvelocity.bc_dirichlet
@@ -688,6 +706,7 @@ for t in tqdm(range(0, nt)):
  vx = vx[0].reshape((len(vx[0]),1))
  
  # Velocity vy
+ vy_old = np.copy(vy)
  yvelocity_RHS = -sps.lil_matrix.dot(Gx,psi)
  yvelocity_RHS = np.multiply(yvelocity_RHS,condition_yvelocity.bc_2)
  yvelocity_RHS = yvelocity_RHS + condition_yvelocity.bc_dirichlet
@@ -696,8 +715,33 @@ for t in tqdm(range(0, nt)):
  # ---------------------------------------------------------------------------------
 
 
-end_time = time()
-solution_time = end_time - start_time
+
+ # ------------------------ CHECK STEADY STATE ----------------------------------
+ vx_dif = np.sqrt((vx-vx_old)**2)
+ vy_dif = np.sqrt((vy-vy_old)**2)
+ if np.all(vx_dif < 5e-50) and np.all(vy_dif < 5e-50):
+  end_type = 1
+  break
+ # ---------------------------------------------------------------------------------
+
+ # ------------------------ CHECK CONVERGENCE RESULT ----------------------------------
+ if np.linalg.norm(vx) > 10e1 or np.linalg.norm(vx) > 10e1:
+  end_type = 2
+  break
+ # ---------------------------------------------------------------------------------
+
+
+ end_solver_time = time()
+ solver_time = end_solver_time - start_solver_time
+ print ' time duration: %.1f seconds' %solver_time
+ print ""
+ #----------------------------------------------------------------------------------
+ 
+
+
+
+end_solution_time = time()
+solution_time = end_solution_time - start_solution_time
 print ' time duration: %.1f seconds' %solution_time
 print ""
 #----------------------------------------------------------------------------------
@@ -710,8 +754,24 @@ print ' ----------------'
 print ' SAVING RELATORY:'
 print ' ----------------'
 print ""
-print ' End simulation. Relatory saved in %s' %directory_save
-print ""
+
+if end_type == 0:
+ print ' END SIMULATION. NOT STEADY STATE'
+ print ' Relatory saved in %s' %directory_save
+ print ""
+
+elif end_type == 1:
+ print ' END SIMULATION. STEADY STATE'
+ print ' Relatory saved in %s' %directory_save
+ print ""
+
+elif end_type == 2:
+ print ' END SIMULATION. ERROR CONVERGENCE RESULT'
+ print ' Relatory saved in %s' %directory_save
+ print ""
+
+
+
 
 # -------------------------------- Export Relatory ---------------------------------------
 relatory.export(save.path, directory_save, sys.argv[0], benchmark_problem, scheme_name, mesh_name, equation_number, npoints, nelem, length_min, dt, nt, Re, Sc, import_mesh_time, assembly_time, bc_apply_time, solution_time, polynomial_order, gausspoints)

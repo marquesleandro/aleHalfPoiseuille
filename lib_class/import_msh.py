@@ -604,6 +604,7 @@ class Quad2D:
   _self.dirichlet_lines = {}
   _self.dirichlet_pts = {}
   _self.neighbors_nodes = {}
+  _self.neighbors_nodes1 = {}
   _self.neighbors_elements = {}
   _self.far_neighbors_nodes = {}
   _self.far_neighbors_elements = {}
@@ -670,6 +671,7 @@ class Quad2D:
 
   for i in range(0, _self.npoints):
    _self.neighbors_nodes[i] = []
+   _self.neighbors_nodes1[i] = []
    _self.neighbors_elements[i] = []
    _self.far_neighbors_nodes[i] = []
    _self.far_neighbors_elements[i] = []
@@ -720,6 +722,20 @@ class Quad2D:
    _self.neighbors_nodes[v4] = list(set(_self.neighbors_nodes[v4]))
    _self.neighbors_nodes[v5] = list(set(_self.neighbors_nodes[v5]))
    _self.neighbors_nodes[v6] = list(set(_self.neighbors_nodes[v6]))
+ 
+   _self.neighbors_nodes1[v1].extend([v1,v2,v3])  
+   _self.neighbors_nodes1[v2].extend([v1,v2,v3])  
+   _self.neighbors_nodes1[v3].extend([v1,v2,v3])  
+   _self.neighbors_nodes1[v4].extend([v1,v2])  
+   _self.neighbors_nodes1[v5].extend([v2,v3])  
+   _self.neighbors_nodes1[v6].extend([v3,v1])  
+   
+   _self.neighbors_nodes1[v1] = list(set(_self.neighbors_nodes1[v1]))
+   _self.neighbors_nodes1[v2] = list(set(_self.neighbors_nodes1[v2]))
+   _self.neighbors_nodes1[v3] = list(set(_self.neighbors_nodes1[v3]))
+   _self.neighbors_nodes1[v4] = list(set(_self.neighbors_nodes1[v4]))
+   _self.neighbors_nodes1[v5] = list(set(_self.neighbors_nodes1[v5]))
+   _self.neighbors_nodes1[v6] = list(set(_self.neighbors_nodes1[v6]))
    
    _self.neighbors_elements[v1].append(e)  
    _self.neighbors_elements[v2].append(e)  

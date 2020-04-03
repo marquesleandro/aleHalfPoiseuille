@@ -157,6 +157,46 @@ def MINILaplacian_smoothing(_neighbors_nodes, _npoints, _nelem, _IEN, _x, _y, _d
   v4 = _IEN[e][3]
 
   vx_laplaciansmooth[v4] = (vx_laplaciansmooth[v1] + vx_laplaciansmooth[v2] + vx_laplaciansmooth[v3])/3.0
+  vy_laplaciansmooth[v4] = (vy_laplaciansmooth[v1] + vy_laplaciansmooth[v2] + vy_laplaciansmooth[v3])/3.0
+
+
+ return vx_laplaciansmooth, vy_laplaciansmooth
+
+
+def QUADLaplacian_smoothing(_neighbors_nodes, _npoints, _nelem, _IEN, _x, _y, _dt):
+ vx_laplaciansmooth = np.zeros([_npoints,1], dtype = float)
+ vy_laplaciansmooth = np.zeros([_npoints,1], dtype = float)
+ 
+ for i in range(0,_npoints):
+  num_nghb = len(_neighbors_nodes[i])
+  x_distance = 0.0
+  y_distance = 0.0
+  
+  for j in range(0,num_nghb):
+   node_nghb = _neighbors_nodes[i][j]
+
+   x_distance = x_distance + (1.0/num_nghb)*(_x[node_nghb] - _x[i])
+   y_distance = y_distance + (1.0/num_nghb)*(_y[node_nghb] - _y[i])
+
+  vx_laplaciansmooth[i] = x_distance/_dt
+  vy_laplaciansmooth[i] = y_distance/_dt
+
+ for e in range(0,_nelem):
+  v1 = _IEN[e][0]
+  v2 = _IEN[e][1]
+  v3 = _IEN[e][2]
+  v4 = _IEN[e][3]
+  v5 = _IEN[e][4]
+  v6 = _IEN[e][5]
+
+  vx_laplaciansmooth[v4] = (vx_laplaciansmooth[v1] + vx_laplaciansmooth[v2])/2.0
+  vx_laplaciansmooth[v5] = (vx_laplaciansmooth[v2] + vx_laplaciansmooth[v3])/2.0
+  vx_laplaciansmooth[v6] = (vx_laplaciansmooth[v3] + vx_laplaciansmooth[v1])/2.0
+
+  vy_laplaciansmooth[v4] = (vy_laplaciansmooth[v1] + vy_laplaciansmooth[v2])/2.0
+  vy_laplaciansmooth[v5] = (vy_laplaciansmooth[v2] + vy_laplaciansmooth[v3])/2.0
+  vy_laplaciansmooth[v6] = (vy_laplaciansmooth[v3] + vy_laplaciansmooth[v1])/2.0
+
 
 
  return vx_laplaciansmooth, vy_laplaciansmooth
