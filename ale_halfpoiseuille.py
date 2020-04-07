@@ -155,7 +155,7 @@ IEN                    = msh.IEN
 neumann_edges          = msh.neumann_edges
 dirichlet_pts          = msh.dirichlet_pts
 neighbors_nodes        = msh.neighbors_nodes
-neighbors_nodes1        = msh.neighbors_nodes1
+#neighbors_nodes1        = msh.neighbors_nodes1
 neighbors_elements     = msh.neighbors_elements
 far_neighbors_nodes    = msh.far_neighbors_nodes
 far_neighbors_elements = msh.far_neighbors_elements
@@ -166,7 +166,7 @@ nphysical              = msh.nphysical
 
 CFL = 0.5
 #dt = float(CFL*length_min)
-dt = 0.002
+dt = 0.001
 Re = 100.0
 Sc = 1.0
 
@@ -445,15 +445,15 @@ for t in tqdm(range(0, nt)):
  
  
   k_lagrangian = 0.0
-  k_laplace = 1.0
+  k_laplace = 0.5
   k_velocity = 0.0
   
-  vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes1, npoints, x, y, dt)
-  #vx_laplaciansmooth, vy_laplaciansmooth = ale.MINILaplacian_smoothing(neighbors_nodes, npoints, nelem, IEN, x, y, dt)
-  #vx_laplaciansmooth, vy_laplaciansmooth = ale.QUADLaplacian_smoothing(neighbors_nodes, npoints, nelem, IEN, x, y, dt)
+  vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes, npoints, x, y, dt)
+  #vx_laplaciansmooth, vy_laplaciansmooth = ale.Laplacian_smoothing(neighbors_nodes1, npoints, x, y, dt)
 
 
-  vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes1, npoints, vx, vy)
+  vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes, npoints, vx, vy)
+  #vx_velocitysmooth, vy_velocitysmooth = ale.Velocity_smoothing(neighbors_nodes1, npoints, vx, vy)
 
  
   vx_Ale = k_lagrangian*vx + k_laplace*vx_laplaciansmooth + k_velocity*vx_velocitysmooth

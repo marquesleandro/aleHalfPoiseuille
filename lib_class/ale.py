@@ -119,7 +119,34 @@ def Laplacian_smoothing(_neighbors_nodes, _npoints, _x, _y, _dt):
   num_nghb = len(_neighbors_nodes[i])
   x_distance = 0.0
   y_distance = 0.0
-  
+  sumLength = 0.0  
+
+  for j in range(0,num_nghb):
+   node_nghb = _neighbors_nodes[i][j]
+
+   xx = _x[node_nghb] - _x[i]
+   yy = _y[node_nghb] - _y[i]
+   length = np.sqrt(xx**2 + yy**2)
+
+   x_distance = x_distance + _x[node_nghb]*length
+   y_distance = y_distance + _y[node_nghb]*length
+   sumLength = sumLength + length
+
+  vx_laplaciansmooth[i] = ((x_distance/sumLength) - _x[i])/_dt
+  vy_laplaciansmooth[i] = ((y_distance/sumLength) - _y[i])/_dt
+
+ return vx_laplaciansmooth, vy_laplaciansmooth
+
+
+def Laplacian_smoothing_avg(_neighbors_nodes, _npoints, _x, _y, _dt):
+ vx_laplaciansmooth = np.zeros([_npoints,1], dtype = float)
+ vy_laplaciansmooth = np.zeros([_npoints,1], dtype = float)
+
+ for i in range(0,_npoints):
+  num_nghb = len(_neighbors_nodes[i])
+  x_distance = 0.0
+  y_distance = 0.0
+
   for j in range(0,num_nghb):
    node_nghb = _neighbors_nodes[i][j]
 
