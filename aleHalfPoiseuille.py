@@ -199,7 +199,7 @@ print ' time duration: %.1f seconds \n' %import_mesh_time
 
 
 
-
+print boundaryNodes
 
 print ' ---------'
 print ' ASSEMBLY:'
@@ -365,7 +365,6 @@ elif polynomial_option == 3:
 
 
 
-
 vorticityAux1BC = np.zeros([numNodes,1], dtype = float) 
 x_old = np.zeros([numNodes,1], dtype = float)
 y_old = np.zeros([numNodes,1], dtype = float)
@@ -428,6 +427,7 @@ for t in tqdm(range(1, nt)):
   kVelocity = 0.0
   
   vxLaplacianSmooth, vyLaplacianSmooth = ALE.Laplacian_smoothing(neighborsNodesALE, numNodes, x, y, dt)
+  #vxLaplacianSmooth, vyLaplacianSmooth = ALE.Laplacian_smoothing_avg(neighborsNodesALE, numNodes, x, y, dt)
   vxVelocitySmooth,  vyVelocitySmooth  = ALE.Velocity_smoothing(neighborsNodesALE, numNodes, vx, vy)
 
   vxALE = kLagrangian*vx + kLaplace*vxLaplacianSmooth + kVelocity*vxVelocitySmooth

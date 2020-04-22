@@ -660,9 +660,9 @@ class Quad2D:
 
  
 
-   _self.neighborsNodesALE[v1].extend([v1,v2,v3])  
-   _self.neighborsNodesALE[v2].extend([v1,v2,v3])  
-   _self.neighborsNodesALE[v3].extend([v1,v2,v3])  
+   _self.neighborsNodesALE[v1].extend([v1,v2,v3,v4,v6])  
+   _self.neighborsNodesALE[v2].extend([v1,v2,v3,v4,v5])  
+   _self.neighborsNodesALE[v3].extend([v1,v2,v3,v5,v6])  
    _self.neighborsNodesALE[v4].extend([v1,v2])  
    _self.neighborsNodesALE[v5].extend([v2,v3])  
    _self.neighborsNodesALE[v6].extend([v3,v1])  
