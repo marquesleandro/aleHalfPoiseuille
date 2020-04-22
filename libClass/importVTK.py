@@ -12,7 +12,7 @@
 
 import numpy as np
 
-def vtkfile_linear(_file,polynomial_option): 
+def vtkfile_linear(_file): 
 
  vtklist = [] 
  with open(_file) as vtkfile:
@@ -35,27 +35,12 @@ def vtkfile_linear(_file,polynomial_option):
    if vtklist[i][j] == "CELLS":
     nelem = int(vtklist[i][j+1])
 
-    #Linear and Mini Element
-    if polynomial_option == 1 or polynomial_option == 2:
-     IEN = np.zeros([nelem,3], dtype = int)
-     for e in range(0,nelem):
-      IEN[e][0] = int(vtklist[i+e+1][1])
-      IEN[e][1] = int(vtklist[i+e+1][2])
-      IEN[e][2] = int(vtklist[i+e+1][3])
-     continue 
-
-    #Quad Element
-    elif polynomial_option == 3:
-     IEN = np.zeros([nelem,6], dtype = int)
-     for e in range(0,nelem):
-      IEN[e][0] = int(vtklist[i+e+1][1])
-      IEN[e][1] = int(vtklist[i+e+1][2])
-      IEN[e][2] = int(vtklist[i+e+1][3])
-      IEN[e][3] = int(vtklist[i+e+1][4])
-      IEN[e][4] = int(vtklist[i+e+1][5])
-      IEN[e][5] = int(vtklist[i+e+1][6])
-     continue 
-
+    IEN = np.zeros([nelem,3], dtype = int)
+    for e in range(0,nelem):
+     IEN[e][0] = int(vtklist[i+e+1][1])
+     IEN[e][1] = int(vtklist[i+e+1][2])
+     IEN[e][2] = int(vtklist[i+e+1][3])
+    continue 
 
    if vtklist[i][j] == "VECTORS":
     vx = np.zeros([npoints,1], dtype = float)
