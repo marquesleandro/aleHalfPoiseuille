@@ -90,7 +90,7 @@ start_time = time()
 
 # Linear and Mini Elements
 if polynomial_option == 1 or polynomial_option == 2:
- mshFileName = 'linearHalfPoiseuille.msh'
+ mshFileName = 'linearHalfPoiseuille2.msh'
 
  pathMSHFile = searchMSH.Find(mshFileName)
  if pathMSHFile == 'File not found':
@@ -198,8 +198,6 @@ import_mesh_time = end_time - start_time
 print ' time duration: %.1f seconds \n' %import_mesh_time
 
 
-
-print boundaryNodes
 
 print ' ---------'
 print ' ASSEMBLY:'
