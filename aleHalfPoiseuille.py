@@ -90,7 +90,7 @@ start_time = time()
 
 # Linear and Mini Elements
 if polynomial_option == 1 or polynomial_option == 2:
- mshFileName = 'linearHalfPoiseuille2.msh'
+ mshFileName = 'linearHalfPoiseuille.msh'
 
  pathMSHFile = searchMSH.Find(mshFileName)
  if pathMSHFile == 'File not found':
@@ -140,8 +140,8 @@ if polynomial_option == 1 or polynomial_option == 2:
   Re = 100.0
   Sc = 1.0
   CFL = 0.5
-  #dt = float(CFL*minLengthMesh)
-  dt = 0.1   #linear result ok 
+  dt = float(CFL*minLengthMesh)
+  #dt = 0.1   #linear result ok 
 
 
 
@@ -302,7 +302,7 @@ psi = psi[0].reshape((len(psi[0]),1))
 
 
 # -------------------------- Import VTK File ------------------------------------
-#numNodes, numElements, IEN, x, y, vx, vy, w, w, psi = importVTK.vtkfile_linear("/home/marquesleandro/axiHagenPoiseuille/results/linear8/linear8290.vtk")
+numNodes, numElements, IEN, x, y, vx, vy, w, w, psi = importVTK.vtkFile("/home/marquesleandro/aleHalfPoiseuille/libClass/quad499.vtk", polynomial_option)
 #----------------------------------------------------------------------------------
 
 
@@ -370,6 +370,8 @@ vx_old = np.zeros([numNodes,1], dtype = float)
 vy_old = np.zeros([numNodes,1], dtype = float)
 end_type = 0
 for t in tqdm(range(1, nt)):
+ numIteration = t
+
 
  print ""
  print '''
@@ -398,7 +400,7 @@ for t in tqdm(range(1, nt)):
  print ' Number of elements: %s' %numElements
  print ' Smallest edge length: %f' %minLengthMesh
  print ' Time step: %s' %dt
- print ' Number of time iteration: %s' %t
+ print ' Number of time iteration: %s' %numIteration
  print ' Reynolds number: %s' %Re
  print ' Schmidt number: %s' %Sc
  print ""
@@ -696,9 +698,9 @@ for t in tqdm(range(1, nt)):
 
 
  # ------------------------ CHECK STEADY STATE ----------------------------------
- if np.all(vx == vx_old) and np.all(vy == vy_old):
-  end_type = 1
-  break
+ #if np.all(vx == vx_old) and np.all(vy == vy_old):
+ # end_type = 1
+ # break
  # ---------------------------------------------------------------------------------
 
  # ------------------------ CHECK CONVERGENCE RESULT ----------------------------------
@@ -740,7 +742,7 @@ elif end_type == 2:
 
 
 # -------------------------------- Export Relatory ---------------------------------------
-relatory.export(save.path, folderResults, sys.argv[0], benchmark_problem, scheme_name, mshFileName, numNodes, numElements, minLengthMesh, dt, nt, Re, Sc, import_mesh_time, assembly_time, bc_apply_time, solution_time, polynomial_order, gausspoints)
+relatory.export(save.path, folderResults, sys.argv[0], benchmark_problem, scheme_name, mshFileName, numNodes, numElements, minLengthMesh, dt, numIteration, Re, Sc, import_mesh_time, assembly_time, bc_apply_time, solution_time, polynomial_order, gausspoints)
 # ----------------------------------------------------------------------------------------
 
 

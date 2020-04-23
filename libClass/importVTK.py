@@ -12,60 +12,75 @@
 
 import numpy as np
 
-def vtkfile_linear(_file): 
+def vtkFile(_file, _polynomial_option): 
 
- vtklist = [] 
- with open(_file) as vtkfile:
-   for line in vtkfile:
+ vtkList = [] 
+ with open(_file) as vtkFile:
+   for line in vtkFile:
     row = line.split()
-    vtklist.append(row[:])
+    vtkList.append(row[:])
 
- for i in range(0,len(vtklist)):
-  for j in range(0,len(vtklist[i])):
-   if vtklist[i][j] == "POINTS":
-    npoints = int(vtklist[i][j+1])
+ for i in range(0,len(vtkList)):
+  for j in range(0,len(vtkList[i])):
+   if vtkList[i][j] == "POINTS":
+    numNodes = int(vtkList[i][j+1])
 
-    x = np.zeros([npoints,1], dtype = float)
-    y = np.zeros([npoints,1], dtype = float)
-    for k in range(0,npoints):
-     x[k] = float(vtklist[i+k+1][0])
-     y[k] = float(vtklist[i+k+1][1])
+    x = np.zeros([numNodes,1], dtype = float)
+    y = np.zeros([numNodes,1], dtype = float)
+    for k in range(0,numNodes):
+     x[k] = float(vtkList[i+k+1][0])
+     y[k] = float(vtkList[i+k+1][1])
     continue  
 
-   if vtklist[i][j] == "CELLS":
-    nelem = int(vtklist[i][j+1])
+   if vtkList[i][j] == "CELLS":
+    numElements = int(vtkList[i][j+1])
 
-    IEN = np.zeros([nelem,3], dtype = int)
-    for e in range(0,nelem):
-     IEN[e][0] = int(vtklist[i+e+1][1])
-     IEN[e][1] = int(vtklist[i+e+1][2])
-     IEN[e][2] = int(vtklist[i+e+1][3])
-    continue 
+    # Linear Element
+    if _polynomial_option == 1:
+     IEN = np.zeros([numElements,3], dtype = int)
+     for e in range(0,numElements):
+      IEN[e][0] = int(vtkList[i+e+1][1])
+      IEN[e][1] = int(vtkList[i+e+1][2])
+      IEN[e][2] = int(vtkList[i+e+1][3])
+     continue 
 
-   if vtklist[i][j] == "VECTORS":
-    vx = np.zeros([npoints,1], dtype = float)
-    vy = np.zeros([npoints,1], dtype = float)
-    for k in range(0,npoints):
-     vx[k] = float(vtklist[i+k+1][0])
-     vy[k] = float(vtklist[i+k+1][1])
+    # Quad Element
+    elif _polynomial_option == 3:
+     IEN = np.zeros([numElements,6], dtype = int)
+     for e in range(0,numElements):
+      IEN[e][0] = int(vtkList[i+e+1][1])
+      IEN[e][1] = int(vtkList[i+e+1][2])
+      IEN[e][2] = int(vtkList[i+e+1][3])
+      IEN[e][3] = int(vtkList[i+e+1][4])
+      IEN[e][4] = int(vtkList[i+e+1][5])
+      IEN[e][5] = int(vtkList[i+e+1][6])
+     continue 
+
+
+   if vtkList[i][j] == "VECTORS":
+    vx = np.zeros([numNodes,1], dtype = float)
+    vy = np.zeros([numNodes,1], dtype = float)
+    for k in range(0,numNodes):
+     vx[k] = float(vtkList[i+k+1][0])
+     vy[k] = float(vtkList[i+k+1][1])
     continue  
 
-   if vtklist[i][j] == "scalar1":
-    scalar1 = np.zeros([npoints,1], dtype = float)
-    for k in range(0,npoints):
-     scalar1[k] = float(vtklist[i+k+2][0])
+   if vtkList[i][j] == "scalar1":
+    scalar1 = np.zeros([numNodes,1], dtype = float)
+    for k in range(0,numNodes):
+     scalar1[k] = float(vtkList[i+k+2][0])
     continue  
 
-   if vtklist[i][j] == "scalar2":
-    scalar2 = np.zeros([npoints,1], dtype = float)
-    for k in range(0,npoints):
-     scalar2[k] = float(vtklist[i+k+2][0])
+   if vtkList[i][j] == "scalar2":
+    scalar2 = np.zeros([numNodes,1], dtype = float)
+    for k in range(0,numNodes):
+     scalar2[k] = float(vtkList[i+k+2][0])
     continue  
 
-   if vtklist[i][j] == "scalar3":
-    scalar3 = np.zeros([npoints,1], dtype = float)
-    for k in range(0,npoints):
-     scalar3[k] = float(vtklist[i+k+2][0])
+   if vtkList[i][j] == "scalar3":
+    scalar3 = np.zeros([numNodes,1], dtype = float)
+    for k in range(0,numNodes):
+     scalar3[k] = float(vtkList[i+k+2][0])
     continue  
 
- return npoints, nelem, IEN, x, y, vx, vy, scalar1, scalar2, scalar3
+ return numNodes, numElements, IEN, x, y, vx, vy, scalar1, scalar2, scalar3
