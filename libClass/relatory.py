@@ -18,7 +18,7 @@
 import os
 import datetime
 
-def export(_save_path, _directory_name, _simulator_name, _benchmark_problem, _scheme, _mesh_name, _npoints, _nelem, _length_min, _dt, _nt, _Re, _Sc, _import_mesh_time, _assembly_time, _bc_apply_time, _solution_time, _polynomial_order, _gausspoints):
+def export(_save_path, _directory_name, _simulator_name, _benchmark_problem, _scheme, _mesh_name, _npoints, _nelem, _length_min, _dt, _nt, _Re, _Sc, _import_mesh_time, _assembly_time, _bc_apply_time, _solution_time, _polynomial_order, _gausspoints, observation):
 
  save_path = _save_path
  directory_name = _directory_name
@@ -113,6 +113,16 @@ def export(_save_path, _directory_name, _simulator_name, _benchmark_problem, _sc
  relatory.write(' time duration: ' + str(solution_time) + ' seconds')
  relatory.write('\n')
  relatory.write('\n')
+
+
+ relatory.write(' ------------ \n')
+ relatory.write(' OBSERVATION: \n')
+ relatory.write(' ------------ \n')
+ relatory.write(str(observation))
+ relatory.write('\n')
+ relatory.write('\n')
+
+
 
  
  relatory.close()
