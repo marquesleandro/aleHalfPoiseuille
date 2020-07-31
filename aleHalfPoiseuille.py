@@ -109,7 +109,8 @@ start_time = time()
 
 # Linear and Mini Elements
 if polynomial_option == 1 or polynomial_option == 2:
- mshFileName = 'linearHalfPoiseuille.msh'
+ #mshFileName = 'linearHalfPoiseuille.msh'
+ mshFileName = 'mesh3.msh'
 
  pathMSHFile = searchMSH.Find(mshFileName)
  if pathMSHFile == 'File not found':
