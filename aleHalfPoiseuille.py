@@ -322,7 +322,7 @@ psi = psi[0].reshape((len(psi[0]),1))
 
 
 # -------------------------- Import VTK File ------------------------------------
-#numNodes, numElements, IEN, x, y, vx, vy, w, w, psi = importVTK.vtkFile("/home/marquesleandro/aleHalfPoiseuille/libClass/quad499.vtk", polynomial_option)
+numNodes, numElements, IEN, x, y, vx, vy, w, w, psi = importVTK.vtkFile("/home/marquesleandro/aleHalfPoiseuille/results/quad4/quad4199.vtk", polynomial_option)
 #----------------------------------------------------------------------------------
 
 
